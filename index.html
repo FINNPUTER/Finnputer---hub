@@ -219,6 +219,7 @@
 <script>
 // ====== EDIT THESE ======
 const CA        = 'Xp8dC5i7EcAeZo873ijwvipt3pUbgvgi5sHsg9sBAGS'; // $FINNPUTER mint
+const PERPS     = 'https://finnputerdex.com';                     // FINNPUTER PERPS — Orderly-powered perps DEX (root)
 const TERMINAL  = 'https://terminal.finnputerdex.com';            // live terminal + FINN tab + feed
 const TRADE_BOT = 'https://t.me/FinnputerTradeBot';               // the trading bot (the engine)
 const TRADE     = 'https://trade.finnputerdex.com';               // trade site (browser)
@@ -240,6 +241,7 @@ document.getElementById('ca').textContent = CA;
 document.getElementById('copy').onclick = ()=>{ try{navigator.clipboard.writeText(CA);}catch(e){} const b=document.getElementById('copy'); b.textContent='Copied'; setTimeout(()=>b.textContent='Copy',1200); };
 
 const ECO=[
+  ['Perps DEX','Perpetuals exchange, powered by Orderly',PERPS],
   ['Terminal','Live wallet, FINN tab, feed',TERMINAL],
   ['Trade bot','Trade on Telegram. Fees buy back and burn',TRADE_BOT],
   ['Trade site','Connect and trade in the browser',TRADE],
