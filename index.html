@@ -329,7 +329,13 @@ const ECO=[
 // separate service that can be down while everything else is fine.
 document.getElementById('corelink').href = CORE;
 
-function fmt(n){
+// Deliberately NOT called fmt.
+//
+// The page already had a fmt() further down that formats DOLLARS, and
+// function declarations hoist, so the later one won: every tile came out
+// as "$49.3K wallets scored" and "$283 sealed proofs". Wallets are not
+// money and neither are proofs.
+function coreNum(n){
   if(n == null) return null;
   n = Number(n);
   if(!isFinite(n)) return null;
@@ -348,12 +354,12 @@ async function loadCore(){
     // Only tiles whose number actually arrived. A tile reading "—" is a
     // tile saying the product does not work.
     const tiles = [
-      [fmt(d.wallets_scored), 'wallets scored'],
-      [fmt(d.runners),        'runners found'],
+      [coreNum(d.wallets_scored), 'wallets scored'],
+      [coreNum(d.runners),        'runners found'],
       [d.best_multiple ? Math.round(d.best_multiple) + 'x' : null, 'best runner'],
-      [fmt(d.opportunities_live), 'live now'],
-      [fmt(d.sightings_24h),  'sightings 24h'],
-      [fmt(d.proofs),         'sealed proofs']
+      [coreNum(d.opportunities_live), 'live now'],
+      [coreNum(d.sightings_24h),  'sightings 24h'],
+      [coreNum(d.proofs),         'sealed proofs']
     ].filter(t => t[0] !== null && t[0] !== '0');
     if(!tiles.length) throw new Error('empty');
     box.innerHTML = tiles.slice(0,6).map(t =>
