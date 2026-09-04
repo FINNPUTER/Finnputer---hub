@@ -79,6 +79,19 @@
   .chart{width:100%;aspect-ratio:4/3;background:var(--panel2);}
   .chart iframe{width:100%;height:100%;border:0;display:block;}
 
+  /* Live numbers from the CORE API. Same card language as .game so the
+     block reads as part of the page rather than as a widget bolted on. */
+  .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  .stat{border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 10px;
+        background:rgba(255,255,255,.02);text-align:center;}
+  .stat b{display:block;font-family:var(--disp);font-weight:700;font-size:19px;
+          color:var(--green);line-height:1.15;}
+  .stat span{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+             color:var(--dim);margin-top:5px;}
+  .statlink{display:inline-block;margin-top:10px;font-family:var(--mono);font-size:11px;
+            color:var(--dim);text-decoration:none;}
+  .statlink:hover{color:var(--green);}
+  @media(max-width:380px){ .stats{grid-template-columns:1fr 1fr;} }
   .games{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .game{display:flex;flex-direction:column;justify-content:space-between;min-height:96px;text-decoration:none;
     background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;transition:border-color .12s,transform .12s;}
@@ -178,6 +191,14 @@
   </div>
 
   <section class="block">
+    <div class="eyebrow">CORE, live</div>
+    <div class="stats" id="corestats">
+      <div class="stat"><b>&mdash;</b><span>loading</span></div>
+    </div>
+    <a class="statlink" id="corelink" target="_blank" rel="noopener">Open CORE &rsaquo;</a>
+  </section>
+
+  <section class="block">
     <div class="eyebrow">The ecosystem</div>
     <div class="games" id="eco"></div>
   </section>
@@ -257,6 +278,8 @@
 <script>
 // ====== EDIT THESE ======
 const CA        = 'Xp8dC5i7EcAeZo873ijwvipt3pUbgvgi5sHsg9sBAGS'; // $FINNPUTER mint
+const CORE      = 'https://core.finnputerdex.com';               // CORE - the scanner, signals and the public record
+const CORE_API  = 'https://core-api-production-182c.up.railway.app'; // read-only API behind CORE
 const PERPS     = 'https://finnputerdex.com';                     // FINNPUTER PERPS — Orderly-powered perps DEX (root)
 const TERMINAL  = 'https://terminal.finnputerdex.com';            // live terminal + FINN tab + feed
 const TRADE_BOT = 'https://t.me/FinnputerTradeBot';               // the trading bot (the engine)
@@ -282,6 +305,7 @@ document.getElementById('ca').textContent = CA;
 document.getElementById('copy').onclick = ()=>{ try{navigator.clipboard.writeText(CA);}catch(e){} const b=document.getElementById('copy'); b.textContent='Copied'; setTimeout(()=>b.textContent='Copy',1200); };
 
 const ECO=[
+  ['CORE','The scanner. Who is buying, before it moves',CORE],
   ['Perps DEX','Perpetuals exchange, powered by Orderly',PERPS],
   ['Terminal','Live wallet, FINN tab, feed',TERMINAL],
   ['Trade bot','Trade on Telegram. Fees buy back and burn',TRADE_BOT],
@@ -291,6 +315,56 @@ const ECO=[
   ['FinnputerPay','Accept SOL, USDC and $FINNPUTER',PAY],
   ['Arcade','Five games. Climb the board',ARCADE]
 ];
+// ── CORE, live ────────────────────────────────────────────────────
+//
+// The hub listed eight products and said nothing about any of them
+// working. These four numbers come from the read-only CORE API and are
+// the only thing on this page that changes on its own, which is what
+// makes it worth looking at twice.
+//
+// Failure is silent and the block simply disappears. A hub whose live
+// tile reads "error" is worse than a hub without one, and the API is a
+// separate service that can be down while everything else is fine.
+document.getElementById('corelink').href = CORE;
+
+function fmt(n){
+  if(n == null) return null;
+  n = Number(n);
+  if(!isFinite(n)) return null;
+  if(n >= 1000000) return (n/1000000).toFixed(1).replace(/\.0$/,'') + 'M';
+  if(n >= 1000)    return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k';
+  return String(Math.round(n));
+}
+
+async function loadCore(){
+  const box = document.getElementById('corestats');
+  try{
+    const r = await fetch(CORE_API + '/v1/stats', {cache:'no-store'});
+    if(!r.ok) throw new Error(r.status);
+    const j = await r.json();
+    const d = j.data || j;
+    // Only tiles whose number actually arrived. A tile reading "—" is a
+    // tile saying the product does not work.
+    const tiles = [
+      [fmt(d.wallets_scored), 'wallets scored'],
+      [fmt(d.runners),        'runners found'],
+      [d.best_multiple ? Math.round(d.best_multiple) + 'x' : null, 'best runner'],
+      [fmt(d.opportunities_live), 'live now'],
+      [fmt(d.sightings_24h),  'sightings 24h'],
+      [fmt(d.proofs),         'sealed proofs']
+    ].filter(t => t[0] !== null && t[0] !== '0');
+    if(!tiles.length) throw new Error('empty');
+    box.innerHTML = tiles.slice(0,6).map(t =>
+      '<div class="stat"><b>'+t[0]+'</b><span>'+t[1]+'</span></div>').join('');
+  }catch(e){
+    // Hide the whole section rather than show a broken one.
+    const sec = box.closest('section');
+    if(sec) sec.style.display = 'none';
+  }
+}
+loadCore();
+setInterval(loadCore, 60000);
+
 document.getElementById('eco').innerHTML = ECO.map(e=>
   '<a class="game" href="'+e[2]+'" target="_blank" rel="noopener"><div><div class="gn">'+e[0]+'</div><div class="gd">'+e[1]+'</div></div><div class="go">Open &rsaquo;</div></a>').join('');
 
