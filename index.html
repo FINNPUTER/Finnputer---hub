@@ -288,6 +288,7 @@ const BURN      = 'https://burns.finnputerdex.com';               // burn dashbo
 const PAY       = 'https://finnputerpay.xyz';                     // FinnputerPay
 const ARCADE    = 'https://finnputer.github.io/FINNPUTER-Game';   // the arcade (game bot is separate)
 const LAUNCHPAD = 'https://launchpad.finnputerdex.com';           // dual-chain token launchpad (RH + Solana)
+const LAUNCH_ST = 'https://stable.finnputerdex.com';              // VERIFY: the Stable-chain launchpad
 const CHANNEL   = 'https://t.me/FinnputerTrade';                  // VERIFY: TRADE & BURN channel handle
 const X_URL     = 'https://x.com/FINNPUTER28';                    // X
 const POKER_TG  = 'https://t.me/SOLPoker_bot';                    // SOLPokerGG bot (partner)
@@ -311,6 +312,7 @@ const ECO=[
   ['Trade bot','Trade on Telegram. Fees buy back and burn',TRADE_BOT],
   ['Trade site','Connect and trade in the browser',TRADE],
   ['Launchpad','Launch tokens on Robinhood and Solana',LAUNCHPAD],
+  ['Stable launchpad','Launch on the Stable chain',LAUNCH_ST],
   ['Burn dashboard','Watch $FINNPUTER burn live',BURN],
   ['FinnputerPay','Accept SOL, USDC and $FINNPUTER',PAY],
   ['Arcade','Five games. Climb the board',ARCADE]
@@ -357,7 +359,14 @@ async function loadCore(){
     box.innerHTML = tiles.slice(0,6).map(t =>
       '<div class="stat"><b>'+t[0]+'</b><span>'+t[1]+'</span></div>').join('');
   }catch(e){
-    // Hide the whole section rather than show a broken one.
+    // Hide the whole section rather than show a broken one, and say why
+    // in the console. A block that vanishes with no trace is a block
+    // nobody can debug: on 04.09.2026 it disappeared and the first guess
+    // was that the code had not deployed, when the API had simply refused
+    // the origin.
+    console.warn('[hub] CORE stats unavailable:', e && e.message ? e.message : e,
+                 '\n  If this is a CORS error, set CORS_ORIGINS on the '
+                 + 'core-api service to * or add ' + location.origin + '.');
     const sec = box.closest('section');
     if(sec) sec.style.display = 'none';
   }
